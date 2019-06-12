@@ -122,8 +122,9 @@ Connector.prototype.getConfig = function(request) {
         name: 'collection',
         type: 'TEXTINPUT',
         displayName: 'Collection',
-        helpText: 'Select the Firestore collection to use for this Data Source. To use multiple \
-                   collections, create additional Data Sources.'
+        helpText: 'Select the Firestore collections to use for this Data Source. To use multiple \
+                   collections, separate each collection by comma. Keep in mind that you can \
+				   only have one schema across your collections.'
       },
       {
         type: 'INFO',
@@ -205,8 +206,8 @@ Connector.prototype.getData = function(request) {
     throw 'Missing project ID'; 
   }
   
-  const collection = request.configParams.collection;
-  if (!collection) {
+  const collectionValue = request.configParams.collection;
+  if (!collectionValue) {
     throw 'Missing collection name'; 
   }
   
@@ -228,10 +229,15 @@ Connector.prototype.getData = function(request) {
   
   // Fetch and filter the requested data from firestore
   const firestore = new Firestore();
-  const data = firestore.getData(
-    project, collection, requestedSchema, numResults, useCollectionGroups, filters);
+  const collections = collectionValue.split(",");
+  var rows = [];
+  collections.forEach(function(collection) {
+    const data = firestore.getData(
+      project, collection, requestedSchema, numResults, useCollectionGroups, filters);
+	rows = rows.concat(data);
+  });
   
-  return {schema: requestedSchema, rows: data};
+  return {schema: requestedSchema, rows: rows};
 }
 
 
